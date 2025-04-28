@@ -1,32 +1,19 @@
-/**
- * src/app.js
- * 
- * Express app setup with middleware and routes
- */
+// src/app.js
 const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const { errorHandler } = require('./middlewares/errorMiddleware');
-const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const errorHandler = require('./middlewares/errorMiddleware');
+const cors = require('cors');
 
 const app = express();
 
-// Security HTTP headers
-app.use(helmet());
-// Enable CORS
+// Middleware
 app.use(cors());
-// Parse JSON request bodies
-app.use(express.json());
-// HTTP request logging
-app.use(morgan('combined'));
+app.use(express.json()); // Parse JSON bodies
 
-// Route registrations
-app.use('/api/auth', authRoutes);
+// Routes
 app.use('/api/users', userRoutes);
 
-// Centralized error handling middleware
+// Error handling middleware (should be last)
 app.use(errorHandler);
 
 module.exports = app;

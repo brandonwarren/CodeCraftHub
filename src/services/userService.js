@@ -1,38 +1,70 @@
-/**
- * src/services/userService.js
- * 
- * Business logic and DB operations related to users
- */
+// src/services/userService.js
 const User = require('../models/userModel');
 
 /**
- * Create a new user
- * @param {Object} userData
- * @returns {Promise<User>}
+ * Creates a new user in the database.
+ * @param {Object} userData - Contains email, password, and optional profile info.
+ * @returns {Promise<User>} Created user document
+ * @throws {Error} If user with email already exists
  */
-async function createUser(userData) {
-  // Additional validations can be added here
-  const user = new User(userData);
-  return user.save();
+async function registerUser(userData) {
+  const existingUser = await User.findOne({ email: userData.email });
+  if (existingUser) {
+    const error = new Error('Email already registered');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Create user with passwordHash set to password (will be hashed by pre-save hook)
+  const user = new User({
+    email: userData.email,
+    passwordHash: userData.password,
+    profile: {
+      name: userData.name || ''
+    }
+  });
+
+  await user.save();
+  return user;
 }
 
 /**
- * Find user by email
+ * Validates user credentials and returns user if valid.
  * @param {string} email
- * @returns {Promise<User|null>}
+ * @param {string} password
+ * @returns {Promise<User>} Authenticated user
+ * @throws {Error} If credentials are invalid
  */
-async function findUserByEmail(email) {
-  return User.findOne({ email });
+async function authenticateUser(email, password) {
+  const user = await User.findOne({ email });
+  if (!user) {
+    const error = new Error('Invalid email or password');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    const error = new Error('Invalid email or password');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  return user;
 }
 
 /**
- * Find user by ID
- * @param {string} id
- * @returns {Promise<User|null>}
+ * Retrieves user profile by user ID.
+ * @param {string} userId
+ * @returns {Promise<User|null>} User document or null if not found
  */
-async function findUserById(id) {
-  return User.findById(id);
+async function getUserProfile(userId) {
+  return User.findById(userId).select('-passwordHash');
 }
 
-module.exports = { createUser, findUserByEmail, findUserById };
+module.exports = {
+  registerUser,
+  authenticateUser,
+  getUserProfile
+};
 

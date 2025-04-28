@@ -1,15 +1,15 @@
+// src/middlewares/errorMiddleware.js
 /**
- * src/middlewares/errorMiddleware.js
- * 
- * Centralized error handling middleware
+ * Express error-handling middleware.
+ * Sends JSON error responses with appropriate HTTP status codes.
  */
 function errorHandler(err, req, res, next) {
-  console.error(err);
+  console.error(err.stack);
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
-    message: err.message || 'Internal Server Error'
+    error: err.message || 'Internal Server Error'
   });
 }
 
-module.exports = { errorHandler };
+module.exports = errorHandler;
 

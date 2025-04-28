@@ -1,16 +1,16 @@
-/**
- * src/routes/userRoutes.js
- * 
- * User related routes (example: get user profile)
- */
+// src/routes/userRoutes.js
 const express = require('express');
-const { getUserProfile } = require('../controllers/userController');
-const { authMiddleware } = require('../middlewares/authMiddleware');
+const userController = require('../controllers/userController');
+const authenticateToken = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-// Protected route to get user profile
-router.get('/profile', authMiddleware, getUserProfile);
+// Public routes
+router.post('/register', userController.register);
+router.post('/login', userController.login);
+
+// Protected routes
+router.get('/profile', authenticateToken, userController.getProfile);
 
 module.exports = router;
 

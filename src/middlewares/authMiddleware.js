@@ -1,29 +1,30 @@
-/**
- * src/middlewares/authMiddleware.js
- * 
- * Middleware to protect routes and verify JWT token
- */
+// src/middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+dotenv.config();
 
-function authMiddleware(req, res, next) {
-  const authHeader = req.headers.authorization;
+/**
+ * Middleware to verify JWT token from Authorization header.
+ * Attaches decoded user info to req.user.
+ * Returns 401 if token is missing or invalid.
+ */
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Authorization token missing or invalid' });
+  if (!token) {
+    return res.status(401).json({ error: 'Access token missing' });
   }
 
-  const token = authHeader.split(' ')[1];
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // Attach decoded token payload to request
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+    req.user = user;
     next();
-  } catch (error) {
-    return res.status(401).json({ message: 'Invalid or expired token' });
-  }
+  });
 }
 
-module.exports = { authMiddleware };
+module.exports = authenticateToken;
 

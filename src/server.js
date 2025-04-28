@@ -1,26 +1,20 @@
-/**
- * src/server.js
- * 
- * Server startup and MongoDB connection
- */
-require('dotenv').config();
-const mongoose = require('mongoose');
+// src/server.js
+const dotenv = require('dotenv');
 const app = require('./app');
+const connectDB = require('./config/db');
+
+dotenv.config();
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
 
 // Connect to MongoDB
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('Connected to MongoDB');
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+connectDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`User service running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to start server:', err);
   });
-}).catch((error) => {
-  console.error('MongoDB connection error:', error);
-  process.exit(1);
-});
 
